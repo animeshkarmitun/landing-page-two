@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 
 interface TrailPoint {
     x: number;
@@ -12,13 +13,19 @@ interface TrailPoint {
 
 export default function CustomCursor() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const cursorDotRef = useRef<HTMLDivElement>(null);
+    const cursorRingRef = useRef<HTMLDivElement>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [isHovering, setIsHovering] = useState(false);
+    const [hoverType, setHoverType] = useState<'link' | 'button' | 'card' | null>(null);
     const trailPoints = useRef<TrailPoint[]>([]);
     const lastPos = useRef({ x: 0, y: 0, time: 0 });
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        const cursorDot = cursorDotRef.current;
+        const cursorRing = cursorRingRef.current;
+        if (!canvas || !cursorDot || !cursorRing) return;
 
         const ctx = canvas.getContext('2d', { alpha: true });
         if (!ctx) return;
@@ -40,6 +47,22 @@ export default function CustomCursor() {
 
             setMousePos({ x: e.clientX, y: e.clientY });
 
+            // Animate cursor dot (immediate follow)
+            gsap.to(cursorDot, {
+                x: e.clientX,
+                y: e.clientY,
+                duration: 0.1,
+                ease: 'power2.out',
+            });
+
+            // Animate cursor ring (delayed follow for lag effect)
+            gsap.to(cursorRing, {
+                x: e.clientX,
+                y: e.clientY,
+                duration: 0.3,
+                ease: 'power2.out',
+            });
+
             trailPoints.current.push({
                 x: e.clientX,
                 y: e.clientY,
@@ -55,11 +78,32 @@ export default function CustomCursor() {
             trailPoints.current = trailPoints.current.filter(
                 point => point.timestamp > cutoff
             );
+
+            // Check what element we're hovering
+            const target = e.target as HTMLElement;
+            const isLink = target.closest('a') !== null;
+            const isButton = target.closest('button') !== null;
+            const isCard = target.closest('[data-cursor-hover]') !== null;
+            const isInteractive = target.closest('[data-cursor-interactive]') !== null;
+
+            if (isCard) {
+                setIsHovering(true);
+                setHoverType('card');
+            } else if (isButton || isInteractive) {
+                setIsHovering(true);
+                setHoverType('button');
+            } else if (isLink) {
+                setIsHovering(true);
+                setHoverType('link');
+            } else {
+                setIsHovering(false);
+                setHoverType(null);
+            }
         };
 
         window.addEventListener('mousemove', handleMouseMove);
 
-        // Animation loop
+        // Animation loop for trail
         let animationFrameId: number;
         const animate = () => {
             // Clear canvas completely to not cover content
@@ -151,13 +195,114 @@ export default function CustomCursor() {
         };
     }, []);
 
+    // Cursor morphing based on hover state
+    useEffect(() => {
+        const cursorDot = cursorDotRef.current;
+        const cursorRing = cursorRingRef.current;
+        if (!cursorDot || !cursorRing) return;
+
+        if (isHovering) {
+            if (hoverType === 'card') {
+                // Expand and blend for cards
+                gsap.to(cursorDot, {
+                    scale: 0,
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: 'power2.out',
+                });
+                gsap.to(cursorRing, {
+                    scale: 3,
+                    opacity: 0.15,
+                    borderWidth: 1,
+                    duration: 0.4,
+                    ease: 'power2.out',
+                });
+            } else if (hoverType === 'button') {
+                // Shrink ring, enlarge dot for buttons
+                gsap.to(cursorDot, {
+                    scale: 2.5,
+                    backgroundColor: 'var(--color-blue, #0016ec)',
+                    duration: 0.3,
+                    ease: 'power2.out',
+                });
+                gsap.to(cursorRing, {
+                    scale: 0.5,
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: 'power2.out',
+                });
+            } else if (hoverType === 'link') {
+                // Subtle scale up for links
+                gsap.to(cursorDot, {
+                    scale: 1.5,
+                    duration: 0.3,
+                    ease: 'power2.out',
+                });
+                gsap.to(cursorRing, {
+                    scale: 1.5,
+                    borderColor: 'var(--color-blue, #0016ec)',
+                    duration: 0.3,
+                    ease: 'power2.out',
+                });
+            }
+        } else {
+            // Reset to default
+            gsap.to(cursorDot, {
+                scale: 1,
+                opacity: 1,
+                backgroundColor: 'var(--color-black, #000)',
+                duration: 0.3,
+                ease: 'power2.out',
+            });
+            gsap.to(cursorRing, {
+                scale: 1,
+                opacity: 0.5,
+                borderWidth: 2,
+                borderColor: 'var(--color-black, #000)',
+                duration: 0.3,
+                ease: 'power2.out',
+            });
+        }
+    }, [isHovering, hoverType]);
+
     return (
         <>
             {/* Oil effect trail canvas */}
             <canvas
                 ref={canvasRef}
-                className="fixed top-0 left-0 w-full h-full pointer-events-none z-[9999]"
+                className="fixed top-0 left-0 w-full h-full pointer-events-none z-[9998]"
                 style={{ mixBlendMode: 'screen' }}
+            />
+
+            {/* Cursor dot (inner) */}
+            <div
+                ref={cursorDotRef}
+                className="fixed top-0 left-0 pointer-events-none z-[9999]"
+                style={{
+                    width: '8px',
+                    height: '8px',
+                    marginLeft: '-4px',
+                    marginTop: '-4px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--color-black, #000)',
+                    mixBlendMode: 'difference',
+                }}
+            />
+
+            {/* Cursor ring (outer) */}
+            <div
+                ref={cursorRingRef}
+                className="fixed top-0 left-0 pointer-events-none z-[9999]"
+                style={{
+                    width: '40px',
+                    height: '40px',
+                    marginLeft: '-20px',
+                    marginTop: '-20px',
+                    borderRadius: '50%',
+                    border: '2px solid var(--color-black, #000)',
+                    opacity: 0.5,
+                    mixBlendMode: 'difference',
+                }}
             />
         </>
     );
