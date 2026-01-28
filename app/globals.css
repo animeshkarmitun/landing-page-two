@@ -801,3 +801,51 @@ p {
   padding: 6px 0;
   opacity: 0.7;
 }
+
+/* ==========================================
+   Project Card Images
+   ========================================== */
+
+.project-item-image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.project-item[data-id="devin_ai"] .project-item-image {
+  background-image: url('/projects/devin_ai/home.webp');
+}
+
+.project-item[data-id="porsche_dream_machine"] .project-item-image {
+  background-image: url('/projects/porsche_dream_machine/home.webp');
+}
+
+.project-item[data-id="synthetic_human"] .project-item-image {
+  background-image: url('/projects/synthetic_human/home.webp');
+}
+
+.project-item[data-id="spatial_fusion"] .project-item-image {
+  background-image: url('/projects/spatial_fusion/home.webp');
+}
+
+.project-item[data-id="spaace"] .project-item-image {
+  background-image: url('/projects/spaace/home.webp');
+}
+
+.project-item[data-id="ddd_2024"] .project-item-image {
+  background-image: url('/projects/ddd_2024/home.webp');
+}
+
+.project-item[data-id="choo_choo_world"] .project-item-image {
+  background-image: url('/projects/choo_choo_world/home.webp');
+}
+
+.project-item[data-id="soda_experience"] .project-item-image {
+  background-image: url('/projects/soda_experience/home.webp');
+}
+
+/* Parallax hover effect */
+.project-item:hover .project-item-image {
+  transform: scale(1.08);
+}

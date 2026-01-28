@@ -392,16 +392,21 @@ import SmoothScroll from '@/components/layout/SmoothScroll';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CustomCursor from '@/components/ui/CustomCursor';
+import SplitText from '@/components/ui/SplitText';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Dynamic import for WebGL scene to avoid SSR issues
+// Dynamic import for WebGL scenes to avoid SSR issues
 const HeroScene = dynamic(() => import('@/components/webgl/HeroScene'), {
     ssr: false,
     loading: () => <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] to-[#1a1a2e]" />
+});
+
+const HeroBlob = dynamic(() => import('@/components/webgl/HeroBlob'), {
+    ssr: false,
 });
 
 export default function Home() {
@@ -603,7 +608,8 @@ export default function Home() {
                                 style={{ position: 'relative', cursor: 'pointer', borderRadius: '24px', height: '600px', overflow: 'hidden' }}
                                 onClick={handleImageClick}
                             >
-                                {/* WebGL Background */}
+                                {/* WebGL Background Layers */}
+                                <HeroBlob />
                                 <HeroScene />
 
                                 {/* Image 1 - Bottom layer */}
@@ -693,8 +699,21 @@ export default function Home() {
                         <section id="home-reel" className="section" ref={reelSectionRef}>
                             <h4 id="home-reel-title">
                                 <div id="home-reel-title-inner">
-                                    <div id="home-reel-title-line-1" ref={reelLine1Ref} style={{ whiteSpace: 'nowrap', overflow: 'visible', paddingLeft: 0 }}>Beyond Visions</div>
-                                    <div id="home-reel-title-line-2" ref={reelLine2Ref}>Within Reach</div>
+                                    <div id="home-reel-title-line-1" ref={reelLine1Ref} style={{ whiteSpace: 'nowrap', overflow: 'visible', paddingLeft: 0 }}>
+                                        <SplitText
+                                            text="Beyond Visions"
+                                            triggerElement="#home-reel"
+                                            stagger={0.04}
+                                        />
+                                    </div>
+                                    <div id="home-reel-title-line-2" ref={reelLine2Ref}>
+                                        <SplitText
+                                            text="Within Reach"
+                                            triggerElement="#home-reel"
+                                            stagger={0.04}
+                                            delay={0.3}
+                                        />
+                                    </div>
                                 </div>
                             </h4>
 
